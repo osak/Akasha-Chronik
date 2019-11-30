@@ -19,7 +19,7 @@ func main() {
 		panic(err)
 	}
 
-	baseDir := "/home/osamu/data/akasha-chronik/twitter"
+	baseDir := os.Args[1]
 	saver, err := twitter.NewSaver(tw, baseDir)
 	if err != nil {
 		panic(err)
