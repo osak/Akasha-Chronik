@@ -29,12 +29,13 @@ func New(config config.TwitterConfig) (*Twitter, error) {
 	}, nil
 }
 
-func (t *Twitter) Favorites(sinceID int64) ([]twitter.Tweet, error) {
+func (t *Twitter) Favorites(sinceID int64, maxID int64) ([]twitter.Tweet, error) {
 	includeEntities := true
 	params := &twitter.FavoriteListParams{
-		UserID: t.id,
-		SinceID: sinceID,
-		Count: 200,
+		UserID:          t.id,
+		SinceID:         sinceID,
+		MaxID:           maxID,
+		Count:           200,
 		IncludeEntities: &includeEntities,
 	}
 	tweets, _, err := t.client.Favorites.List(params)

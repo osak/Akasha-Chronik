@@ -89,11 +89,35 @@ func (s *Saver) saveLastState() error {
 }
 
 func (s *Saver) SaveFavorites(dlr *downloader.Downloader) error {
-	tweets, err := s.twitter.Favorites(s.state.LatestID)
-	if err != nil {
-		return fmt.Errorf("failed to get favorites: %w", err)
+	maxID := int64(0)
+	sinceID := s.state.LatestID
+	for {
+		tweets, err := s.twitter.Favorites(sinceID, maxID)
+		if err != nil {
+			return fmt.Errorf("failed to get favorites: %w", err)
+		}
+
+		// No favourites between sinceID and maxID - we've processed all favs
+		if len(tweets) == 0 {
+			break
+		}
+		s.saveTweetImages(dlr, tweets)
+
+		// Update pagination marker
+		for _, tweet := range tweets {
+			if maxID == 0 || tweet.ID-1 < maxID {
+				maxID = tweet.ID - 1
+			}
+		}
 	}
 
+	if err := s.saveLastState(); err != nil {
+		return fmt.Errorf("failed to save saver state: %w", err)
+	}
+	return nil
+}
+
+func (s *Saver) saveTweetImages(dlr *downloader.Downloader, tweets []twitter.Tweet) {
 	queue := make(chan *processingResult)
 	count := 0
 	for _, tweet := range tweets {
@@ -118,12 +142,7 @@ func (s *Saver) SaveFavorites(dlr *downloader.Downloader) error {
 			nextState.FailedTweetIDs = append(nextState.FailedTweetIDs, result.tag.TweetID)
 		}
 	}
-
 	s.state = nextState
-	if err := s.saveLastState(); err != nil {
-		return fmt.Errorf("failed to save saver state: %w", err)
-	}
-	return nil
 }
 
 func (s *Saver) saveTag(tag Tag) error {
