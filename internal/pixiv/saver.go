@@ -27,6 +27,7 @@ type Tag struct {
 	Description string
 	AuthorName  string
 	OriginalUrl string
+	Tags        []string
 	ImageFiles  []string
 	Timestamp   time.Time
 }
@@ -115,6 +116,7 @@ func (s *Saver) saveBookmark(bm Bookmark) error {
 		Description: info.Description,
 		AuthorName:  info.AuthorName,
 		OriginalUrl: bm.url,
+		Tags:        info.Tags,
 		ImageFiles:  make([]string, 0),
 		Timestamp:   info.Timestamp,
 	}
