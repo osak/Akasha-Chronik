@@ -1,4 +1,4 @@
-package html
+package htmlutil
 
 import (
 	"golang.org/x/net/html"
@@ -8,6 +8,15 @@ import (
 type Node struct {
 	html.Node
 	attrMap *map[string]string
+}
+
+func FindAttr(n *html.Node, name string) string {
+	for _, attr := range n.Attr {
+		if attr.Key == name {
+			return attr.Val
+		}
+	}
+	return ""
 }
 
 func (n *Node) GetAttr(name string) string {

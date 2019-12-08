@@ -36,6 +36,10 @@ func New(config config.PixivConfig) (*Client, error) {
 	}, nil
 }
 
+func (c *Client) Bookmarks(page int) {
+
+}
+
 func (c *Client) Download(url string) (io.Reader, error) {
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {

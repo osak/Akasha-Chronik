@@ -2,6 +2,7 @@ package html
 
 import (
 	"fmt"
+	"github.com/osak/Akasha-Chronik/internal/htmlutil"
 	"golang.org/x/net/html"
 	"io"
 )
@@ -11,9 +12,9 @@ type Document struct {
 }
 
 type Visitor interface {
-	BeginTraverse(*Node)
-	EndTraverse(*Node)
-	Visit(*Node)
+	BeginTraverse(*htmlutil.Node)
+	EndTraverse(*htmlutil.Node)
+	Visit(*htmlutil.Node)
 }
 
 func Parse(r io.Reader) (Document, error) {
@@ -32,7 +33,7 @@ func (d *Document) Traverse(visitor Visitor) {
 }
 
 func (d *Document) traverse(node *html.Node, visitor Visitor) {
-	wrapped := &Node{
+	wrapped := &htmlutil.Node{
 		Node: *node,
 	}
 	visitor.Visit(wrapped)
