@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path"
 	"time"
@@ -86,8 +87,10 @@ func (s *Saver) SaveBookmarks() error {
 				break
 			}
 
+			log.Printf("Saving %s", bm.id)
 			if err := s.saveBookmark(bm); err != nil {
 				s.state.FailedUrls = append(s.state.FailedUrls, bm.url)
+				log.Printf("Failed to save %s: %v", bm.id, err)
 			}
 		}
 	}
@@ -120,8 +123,10 @@ func (s *Saver) saveBookmark(bm Bookmark) error {
 		url := fmt.Sprintf("%s_p%d%s", info.ImageUrlBase, page, info.ImageExt)
 		dest := path.Join(s.destDir, fmt.Sprintf("%s_%d%s", info.ID, page, info.ImageExt))
 
+		log.Printf("Downloading %s", url)
 		err := s.downloadFile(url, info.ID, dest)
 		if err == ErrNotFound {
+			log.Printf("Max page: %d", page-1)
 			break
 		} else if err != nil {
 			return fmt.Errorf("failed to save some images in illust %s: %w", bm.url, err)
