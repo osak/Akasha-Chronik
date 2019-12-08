@@ -9,6 +9,7 @@ import (
 )
 
 type Bookmark struct {
+	id  string
 	url string
 }
 
@@ -23,7 +24,10 @@ func parseBookmarkPage(r io.Reader) ([]Bookmark, error) {
 		href := htmlutil.FindAttr(n, "href")
 		i := strings.Index(href, "illust_id=")
 		id := href[i+len("illust_id="):]
-		bms = append(bms, Bookmark{url: fmt.Sprintf("https://www.pixiv.net/artworks/%s", id)})
+		bms = append(bms, Bookmark{
+			id:  id,
+			url: fmt.Sprintf("https://www.pixiv.net/artworks/%s", id),
+		})
 	}
 	return bms, nil
 }

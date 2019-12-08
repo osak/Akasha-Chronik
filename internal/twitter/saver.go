@@ -202,7 +202,7 @@ func (s *Saver) processTweet(tweet twitter.Tweet, dlr *downloader.Downloader, qu
 
 		file := fmt.Sprintf("%v_%v%v", tweet.ID, i, ext)
 		dest := path.Join(s.destDir, file)
-		if err := <-dlr.Enqueue(media.MediaURLHttps, dest); err == nil {
+		if err := <-dlr.Enqueue(media.MediaURLHttps, dest, nil); err == nil {
 			tag.ImageFiles = append(tag.ImageFiles, dest)
 		} else {
 			// Even if download of a file fails, try to download as much images as possible

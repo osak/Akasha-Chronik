@@ -17,9 +17,27 @@ func TestBookmarks(t *testing.T) {
 		panic(err)
 	}
 
-	bms, err := client.Bookmarks(2)
+	bms, err := client.Bookmarks(15)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(bms)
+}
+
+func TestIllustInfo(t *testing.T) {
+	conf, err := config.Load("/home/osamu/data/credentials.yml")
+	if err != nil {
+		panic(err)
+	}
+
+	client, err := NewClient(conf.Pixiv)
+	if err != nil {
+		panic(err)
+	}
+
+	info, err := client.IllustInfo("77161623")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(info)
 }

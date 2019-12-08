@@ -7,7 +7,7 @@ import (
 )
 
 func TestParse(t *testing.T) {
-	r, err := os.Open("/home/osamu/data/pixiv/tidy.html")
+	r, err := os.Open("/home/osamu/data/pixiv/illust_raw.html")
 	if err != nil {
 		panic(err)
 	}

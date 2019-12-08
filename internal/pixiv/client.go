@@ -51,6 +51,7 @@ func (c *Client) Bookmarks(page int) ([]Bookmark, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get bookmarks: %w", err)
 	}
+	defer resp.Body.Close()
 
 	bms, err := parseBookmarkPage(resp.Body)
 	if err != nil {
@@ -59,7 +60,21 @@ func (c *Client) Bookmarks(page int) ([]Bookmark, error) {
 	return bms, nil
 }
 
-func (c *Client) Download(url string) (io.Reader, error) {
+func (c *Client) IllustInfo(id string) (IllustInfo, error) {
+	resp, err := c.httpClient.Get(fmt.Sprintf("https://www.pixiv.net/artworks/%s", id))
+	if err != nil {
+		return IllustInfo{}, fmt.Errorf("failed to get illust page (id=%s): %w", id, err)
+	}
+	defer resp.Body.Close()
+
+	info, err := parseIllustPage(resp.Body)
+	if err != nil {
+		return IllustInfo{}, fmt.Errorf("failed to parse illut page (id=%s): %w", id, err)
+	}
+	return info, nil
+}
+
+func (c *Client) FetchURL(url string) (io.ReadCloser, error) {
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create a request for '%s': %w", url, err)

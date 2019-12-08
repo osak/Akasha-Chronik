@@ -1,10 +1,14 @@
 package pixiv
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/antchfx/htmlquery"
 	"github.com/osak/Akasha-Chronik/internal/htmlutil"
+	"golang.org/x/net/html"
 	"io"
+	"io/ioutil"
 	"path"
 	"strings"
 	"time"
@@ -15,16 +19,91 @@ type IllustInfo struct {
 	ImageExt     string
 	Title        string
 	Description  string
+	AuthorName   string
 	Tags         []string
 	ID           string
 	Timestamp    time.Time
 }
 
+type infoBlob struct {
+	Illust map[string]illustInfoBlob `json:"illust"`
+}
+
+type illustInfoBlob struct {
+	IllustTitle    string            `json:"illustTitle"`
+	IllustComment  string            `json:"illustComment"`
+	UserName       string            `json:"userName"`
+	URLs           map[string]string `json:"urls"`
+	Tags           tagContainer      `json:"tags"`
+	UploadDateText string            `json:"uploadDate"`
+}
+
+type tagContainer struct {
+	Tags []tagBlob `json:"tags"`
+}
+
+type tagBlob struct {
+	Tag string `json:"tag"`
+}
+
 func parseIllustPage(r io.Reader) (IllustInfo, error) {
-	doc, err := htmlquery.Parse(r)
+	txt, _ := ioutil.ReadAll(r)
+	doc, err := htmlquery.Parse(bytes.NewBuffer(txt))
 	if err != nil {
 		return IllustInfo{}, fmt.Errorf("failed to parse illust page: %w", err)
 	}
+
+	info, err := parseFromPreloadMeta(doc)
+	if err != nil {
+		return IllustInfo{}, fmt.Errorf("failed to parse meta json: %w", err)
+	}
+	return info, nil
+}
+
+func newIllustInfo() IllustInfo {
+	return IllustInfo{
+		Tags: make([]string, 0),
+	}
+}
+
+func parseFromPreloadMeta(doc *html.Node) (IllustInfo, error) {
+	n := htmlquery.FindOne(doc, "//meta[@id='meta-preload-data']/@content")
+	blob := htmlquery.InnerText(n)
+
+	dec := json.NewDecoder(bytes.NewBufferString(blob))
+	infoBlob := infoBlob{}
+	if err := dec.Decode(&infoBlob); err != nil {
+		return IllustInfo{}, fmt.Errorf("failed to parse json: %w", err)
+	}
+
+	var key string
+	for k := range infoBlob.Illust {
+		key = k
+	}
+
+	illustBlob := infoBlob.Illust[key]
+	timestamp, err := time.Parse(time.RFC3339, illustBlob.UploadDateText)
+	if err != nil {
+		timestamp = time.Time{}
+	}
+	tags := make([]string, 0)
+	for _, t := range illustBlob.Tags.Tags {
+		tags = append(tags, t.Tag)
+	}
+
+	return IllustInfo{
+		ImageUrlBase: extractUrlBase(illustBlob.URLs["original"]),
+		ImageExt:     path.Base(illustBlob.URLs["original"]),
+		Title:        illustBlob.IllustTitle,
+		Description:  illustBlob.IllustComment,
+		AuthorName:   illustBlob.UserName,
+		Tags:         tags,
+		ID:           key,
+		Timestamp:    timestamp,
+	}, nil
+}
+
+func parseFromHtml(doc *html.Node) IllustInfo {
 	info := newIllustInfo()
 	n := htmlquery.FindOne(doc, "//link[@rel=\"canonical\"]/@href")
 	info.ID = path.Base(htmlquery.InnerText(n))
@@ -38,18 +117,17 @@ func parseIllustPage(r io.Reader) (IllustInfo, error) {
 	for _, n := range htmlquery.Find(doc, "//a") {
 		href := htmlutil.FindAttr(n, "href")
 		if strings.Contains(href, "i.pximg.net") && strings.Contains(href, info.ID) {
-			i := strings.LastIndex(href, "_")
-			info.ImageUrlBase = href[:i]
+			info.ImageUrlBase = extractUrlBase(href)
 			info.ImageExt = path.Ext(href)
 		} else if strings.Contains(href, "www.pixiv.net/tags/") {
 			info.Tags = append(info.Tags, strings.TrimSpace(htmlquery.InnerText(n)))
 		}
 	}
-	return info, nil
+
+	return info
 }
 
-func newIllustInfo() IllustInfo {
-	return IllustInfo{
-		Tags: make([]string, 0),
-	}
+func extractUrlBase(url string) string {
+	i := strings.LastIndex(url, "_")
+	return url[:i]
 }
