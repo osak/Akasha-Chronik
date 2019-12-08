@@ -93,7 +93,7 @@ func parseFromPreloadMeta(doc *html.Node) (IllustInfo, error) {
 
 	return IllustInfo{
 		ImageUrlBase: extractUrlBase(illustBlob.URLs["original"]),
-		ImageExt:     path.Base(illustBlob.URLs["original"]),
+		ImageExt:     path.Ext(illustBlob.URLs["original"]),
 		Title:        illustBlob.IllustTitle,
 		Description:  illustBlob.IllustComment,
 		AuthorName:   illustBlob.UserName,

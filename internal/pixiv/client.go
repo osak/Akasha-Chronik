@@ -9,6 +9,8 @@ import (
 	"net/url"
 )
 
+var ErrNotFound = fmt.Errorf("not found")
+
 type Client struct {
 	httpClient *http.Client
 	config     config.PixivConfig
@@ -74,15 +76,19 @@ func (c *Client) IllustInfo(id string) (IllustInfo, error) {
 	return info, nil
 }
 
-func (c *Client) FetchURL(url string) (io.ReadCloser, error) {
+func (c *Client) FetchURL(url string, id string) (io.ReadCloser, error) {
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create a request for '%s': %w", url, err)
 	}
+	request.Header.Add("Referer", fmt.Sprintf("https://www.pixiv.net/artworks/%s", id))
 
 	response, err := c.httpClient.Do(request)
 	if err != nil {
 		return nil, fmt.Errorf("failed to run GET request for '%s': %w", url, err)
+	}
+	if response.StatusCode == 404 {
+		return nil, ErrNotFound
 	}
 	return response.Body, nil
 }
