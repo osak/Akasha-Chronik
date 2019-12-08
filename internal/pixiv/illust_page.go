@@ -14,6 +14,8 @@ import (
 type IllustInfo struct {
 	ImageUrlBase string
 	ImageExt     string
+	Title        string
+	Description  string
 	Tags         []string
 	ID           string
 	Timestamp    time.Time
@@ -26,10 +28,25 @@ const (
 	parseMain visitorMode = 2
 )
 
+type parsingContent int
+
+const (
+	none        parsingContent = 0
+	tag         parsingContent = 1
+	title       parsingContent = 2
+	description parsingContent = 3
+	figcaption  parsingContent = 4
+)
+
+type parseContext struct {
+	node    *html.Node
+	content parsingContent
+}
+
 type visitor struct {
-	mode         visitorMode
-	parsingTagIn *html.Node
-	illustInfo   IllustInfo
+	mode       visitorMode
+	ctxStack   []parseContext
+	illustInfo IllustInfo
 }
 
 func parseIllustPage(reader io.Reader) (IllustInfo, error) {
@@ -38,12 +55,12 @@ func parseIllustPage(reader io.Reader) (IllustInfo, error) {
 		return IllustInfo{}, fmt.Errorf("failed to parse illust page: %w", err)
 	}
 
-	ctx := newVisitor()
-	ctx.mode = parseId
-	doc.Traverse(ctx)
-	ctx.mode = parseMain
-	doc.Traverse(ctx)
-	return ctx.illustInfo, nil
+	v := newVisitor()
+	v.mode = parseId
+	doc.Traverse(v)
+	v.mode = parseMain
+	doc.Traverse(v)
+	return v.illustInfo, nil
 }
 
 func newIllustInfo() IllustInfo {
@@ -53,16 +70,15 @@ func newIllustInfo() IllustInfo {
 }
 
 func newVisitor() *visitor {
-	return &visitor{
+	v := &visitor{
 		illustInfo: newIllustInfo(),
+		ctxStack:   make([]parseContext, 0),
 	}
+	v.pushContext(nil, none)
+	return v
 }
 
 func (v *visitor) Visit(node *html.Node) {
-	if node.Type != goHtml.ElementNode {
-		return
-	}
-
 	switch v.mode {
 	case parseId:
 		v.visitId(node)
@@ -80,14 +96,24 @@ func (v *visitor) BeginTraverse(node *html.Node) {
 	case atom.A:
 		href := node.GetAttr("href")
 		if strings.Contains(href, "pixiv.net/tags/") {
-			v.parsingTagIn = node
+			v.pushContext(node, tag)
+		}
+	case atom.Figcaption:
+		v.pushContext(node, figcaption)
+	case atom.H1:
+		if v.currentContext().content == figcaption {
+			v.pushContext(node, title)
+		}
+	case atom.P:
+		if v.currentContext().content == figcaption && node.GetAttr("id") == "expandable-paragraph-0" {
+			v.pushContext(node, description)
 		}
 	}
 }
 
 func (v *visitor) EndTraverse(node *html.Node) {
-	if node == v.parsingTagIn {
-		v.parsingTagIn = nil
+	if v.currentContext().node == node {
+		v.popContext()
 	}
 }
 
@@ -101,8 +127,15 @@ func (v *visitor) visitId(node *html.Node) {
 }
 
 func (v *visitor) visitMain(node *html.Node) {
-	if v.isParsingTag() && node.Type == goHtml.TextNode {
-		v.illustInfo.Tags = append(v.illustInfo.Tags, node.Data)
+	if node.Type == goHtml.TextNode {
+		switch v.currentContext().content {
+		case tag:
+			v.illustInfo.Tags = append(v.illustInfo.Tags, strings.TrimSpace(node.Data))
+		case title:
+			v.illustInfo.Title = strings.TrimSpace(node.Data)
+		case description:
+			v.illustInfo.Description += strings.TrimLeft(node.Data, " ")
+		}
 	}
 
 	if node.Type != goHtml.ElementNode {
@@ -117,11 +150,11 @@ func (v *visitor) visitMain(node *html.Node) {
 			v.illustInfo.ImageUrlBase = href[:i]
 			v.illustInfo.ImageExt = path.Ext(href)
 		}
+	case atom.Br:
+		if v.currentContext().content == description {
+			v.illustInfo.Description += "\n"
+		}
 	}
-}
-
-func (v *visitor) isParsingTag() bool {
-	return v.parsingTagIn != nil
 }
 
 func (v *visitor) parseCanonical(node *html.Node) {
@@ -132,6 +165,27 @@ func (v *visitor) parseCanonical(node *html.Node) {
 
 	base := path.Base(href)
 	dot := strings.Index(base, ".")
-	id := base[:dot]
+	var id string
+	if dot == -1 {
+		id = base
+	} else {
+		id = base[:dot]
+	}
 	v.illustInfo.ID = id
+}
+
+func (v *visitor) pushContext(node *html.Node, content parsingContent) {
+	context := parseContext{
+		node:    node,
+		content: content,
+	}
+	v.ctxStack = append(v.ctxStack, context)
+}
+
+func (v *visitor) popContext() {
+	v.ctxStack = v.ctxStack[:len(v.ctxStack)-1]
+}
+
+func (v *visitor) currentContext() parseContext {
+	return v.ctxStack[len(v.ctxStack)-1]
 }

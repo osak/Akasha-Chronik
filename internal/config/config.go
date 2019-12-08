@@ -7,7 +7,8 @@ import (
 )
 
 type Config struct {
-	Twitter TwitterConfig `yaml:"twitter"`
+	Twitter TwitterConfig `yaml:"twitter,omitempty"`
+	Pixiv   PixivConfig   `yaml:"pixiv,omitempty"`
 }
 
 type TwitterConfig struct {
@@ -15,6 +16,10 @@ type TwitterConfig struct {
 	ConsumerSecret string `yaml:"consumer_secret"`
 	AccessToken    string `yaml:"access_token"`
 	AccessSecret   string `yaml:"access_secret"`
+}
+
+type PixivConfig struct {
+	PhpSessID string `yaml:"php_sess_id"`
 }
 
 func Load(path string) (*Config, error) {
