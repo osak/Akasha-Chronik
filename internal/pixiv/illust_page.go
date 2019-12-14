@@ -54,7 +54,7 @@ func parseIllustPage(r io.Reader) (IllustInfo, error) {
 		return IllustInfo{}, fmt.Errorf("failed to parse illust page: %w", err)
 	}
 
-	info, err := parseFromPreloadMeta(doc)
+	info, err := parseFromPreloadMetaIllust(doc)
 	if err != nil {
 		return IllustInfo{}, fmt.Errorf("failed to parse meta json: %w", err)
 	}
@@ -67,7 +67,7 @@ func newIllustInfo() IllustInfo {
 	}
 }
 
-func parseFromPreloadMeta(doc *html.Node) (IllustInfo, error) {
+func parseFromPreloadMetaIllust(doc *html.Node) (IllustInfo, error) {
 	n := htmlquery.FindOne(doc, "//meta[@id='meta-preload-data']/@content")
 	if n == nil {
 		return IllustInfo{}, errors.New("page does not contain meta tag (maybe deleted?)")
