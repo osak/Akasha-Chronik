@@ -68,10 +68,10 @@ func loadLastState(destDir string) (State, error) {
 	return state, nil
 }
 
-func (s *Saver) SaveBookmarks() error {
+func (s *Saver) SaveBookmarks(startPage int) error {
 	lastSeenID := s.state.LastID
 	newestId := ""
-	for page := 1; ; page += 1 {
+	for page := startPage; ; page += 1 {
 		bms, err := s.client.Bookmarks(page)
 		if err != nil {
 			return fmt.Errorf("failed to get bookmarks: %w", err)
