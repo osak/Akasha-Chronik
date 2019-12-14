@@ -26,11 +26,11 @@ type IllustInfo struct {
 	Timestamp    time.Time
 }
 
-type infoBlob struct {
-	Illust map[string]illustInfoBlob `json:"illust"`
+type illustInfoBlob struct {
+	Illust map[string]illustBlob `json:"illust"`
 }
 
-type illustInfoBlob struct {
+type illustBlob struct {
 	IllustTitle    string            `json:"illustTitle"`
 	IllustComment  string            `json:"illustComment"`
 	UserName       string            `json:"userName"`
@@ -75,7 +75,7 @@ func parseFromPreloadMetaIllust(doc *html.Node) (IllustInfo, error) {
 	blob := htmlquery.InnerText(n)
 
 	dec := json.NewDecoder(bytes.NewBufferString(blob))
-	infoBlob := infoBlob{}
+	infoBlob := illustInfoBlob{}
 	if err := dec.Decode(&infoBlob); err != nil {
 		return IllustInfo{}, fmt.Errorf("failed to parse json: %w", err)
 	}
