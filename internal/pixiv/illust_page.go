@@ -3,6 +3,7 @@ package pixiv
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/antchfx/htmlquery"
 	"github.com/osak/Akasha-Chronik/internal/htmlutil"
@@ -68,6 +69,9 @@ func newIllustInfo() IllustInfo {
 
 func parseFromPreloadMeta(doc *html.Node) (IllustInfo, error) {
 	n := htmlquery.FindOne(doc, "//meta[@id='meta-preload-data']/@content")
+	if n == nil {
+		return IllustInfo{}, errors.New("page does not contain meta tag (maybe deleted?)")
+	}
 	blob := htmlquery.InnerText(n)
 
 	dec := json.NewDecoder(bytes.NewBufferString(blob))
