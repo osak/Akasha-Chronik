@@ -55,7 +55,21 @@ func (c *Client) Bookmarks(page int) ([]Bookmark, error) {
 	}
 	defer resp.Body.Close()
 
-	bms, err := parseBookmarkPage(resp.Body)
+	bms, err := parseIllustBookmarkPage(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse bookmarks: %w", err)
+	}
+	return bms, nil
+}
+
+func (c *Client) BookmarksNovel(page int) ([]Bookmark, error) {
+	resp, err := c.httpClient.Get(fmt.Sprintf("https://www.pixiv.net/novel/bookmark.php?p=%d", page))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get bookmarks: %w", err)
+	}
+	defer resp.Body.Close()
+
+	bms, err := parseNovelBookmarkPage(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse bookmarks: %w", err)
 	}
@@ -71,7 +85,21 @@ func (c *Client) IllustInfo(id string) (IllustInfo, error) {
 
 	info, err := parseIllustPage(resp.Body)
 	if err != nil {
-		return IllustInfo{}, fmt.Errorf("failed to parse illut page (id=%s): %w", id, err)
+		return IllustInfo{}, fmt.Errorf("failed to parse illust page (id=%s): %w", id, err)
+	}
+	return info, nil
+}
+
+func (c *Client) NovelInfo(id string) (NovelInfo, error) {
+	resp, err := c.httpClient.Get(fmt.Sprintf("https://www.pixiv.net/novel/show.php?id=%s", id))
+	if err != nil {
+		return NovelInfo{}, fmt.Errorf("failed to get novel page (id=%s): %w", id, err)
+	}
+	defer resp.Body.Close()
+
+	info, err := parseNovelPage(resp.Body)
+	if err != nil {
+		return NovelInfo{}, fmt.Errorf("failed to parse novel page (id=%s): %w", id, err)
 	}
 	return info, nil
 }

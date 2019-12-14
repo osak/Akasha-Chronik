@@ -11,7 +11,7 @@ func TestParseBookmarkPage(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	bms, err := parseBookmarkPage(r)
+	bms, err := parseIllustBookmarkPage(r)
 	if err != nil {
 		panic(err)
 	}

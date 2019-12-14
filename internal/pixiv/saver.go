@@ -17,8 +17,9 @@ type Saver struct {
 }
 
 type State struct {
-	FailedUrls []string
-	LastID     string
+	FailedUrls  []string
+	LastID      string
+	LastNovelID string `json:",omitempty"`
 }
 
 type Tag struct {
@@ -29,6 +30,17 @@ type Tag struct {
 	OriginalUrl string
 	Tags        []string
 	ImageFiles  []string
+	Timestamp   time.Time
+}
+
+type NovelTag struct {
+	ID          string
+	Title       string
+	Description string
+	AuthorName  string
+	OriginalUrl string
+	Tags        []string
+	NovelFiles  []string
 	Timestamp   time.Time
 }
 
@@ -91,7 +103,7 @@ outer:
 			}
 
 			log.Printf("Saving %s", bm.id)
-			if err := s.saveBookmark(bm); err != nil {
+			if err := s.saveIllustBookmark(bm); err != nil {
 				s.state.FailedUrls = append(s.state.FailedUrls, bm.url)
 				log.Printf("Failed to save %s: %v", bm.id, err)
 			}
@@ -106,7 +118,45 @@ outer:
 	return nil
 }
 
-func (s *Saver) saveBookmark(bm Bookmark) error {
+func (s *Saver) SaveBookmarksNovel(startPage int) error {
+	lastSeenID := s.state.LastNovelID
+	newestId := ""
+
+outer:
+	for page := startPage; ; page += 1 {
+		bms, err := s.client.BookmarksNovel(page)
+		if err != nil {
+			return fmt.Errorf("failed to get bookmarks: %w", err)
+		}
+		if len(bms) == 0 {
+			break
+		}
+		if page == 1 {
+			newestId = bms[0].id
+		}
+
+		for _, bm := range bms {
+			if bm.id == lastSeenID {
+				break outer
+			}
+
+			log.Printf("Saving %s", bm.id)
+			if err := s.saveNovelBookmark(bm); err != nil {
+				s.state.FailedUrls = append(s.state.FailedUrls, bm.url)
+				log.Printf("Failed to save %s: %v", bm.id, err)
+			}
+		}
+	}
+
+	s.state.LastNovelID = newestId
+	if err := s.saveState(); err != nil {
+		return fmt.Errorf("failed to save last state: %w", err)
+	}
+
+	return nil
+}
+
+func (s *Saver) saveIllustBookmark(bm Bookmark) error {
 	info, err := s.client.IllustInfo(bm.id)
 	if err != nil {
 		return fmt.Errorf("failed to fetch illust info for %s: %w", bm.url, err)
@@ -146,6 +196,43 @@ func (s *Saver) saveBookmark(bm Bookmark) error {
 	return nil
 }
 
+func (s *Saver) saveNovelBookmark(bm Bookmark) error {
+	log.Printf("Fetching %s", bm.id)
+	info, err := s.client.NovelInfo(bm.id)
+	if err != nil {
+		return fmt.Errorf("failed to fetch novel info for %s: %w", bm.url, err)
+	}
+
+	dest := path.Join(s.destDir, fmt.Sprintf("novel_%s.txt", info.ID))
+	f, err := os.Create(dest)
+	if err != nil {
+		return fmt.Errorf("failed to create novel file %s: %w", dest, err)
+	}
+	if _, err = f.WriteString(info.Content); err != nil {
+		return fmt.Errorf("failed to save novel to %s: %w", dest, err)
+	}
+	if err = f.Close(); err != nil {
+		return fmt.Errorf("failed to close novel file %s: %w", dest, err)
+	}
+
+	tag := NovelTag{
+		ID:          info.ID,
+		Title:       info.Title,
+		Description: info.Description,
+		AuthorName:  info.AuthorName,
+		OriginalUrl: bm.url,
+		Tags:        info.Tags,
+		NovelFiles:  []string{dest},
+		Timestamp:   info.Timestamp,
+	}
+
+	if err := s.saveTag("novel_"+bm.id, tag); err != nil {
+		return fmt.Errorf("failed to write tag file for novel %s: %w", bm.url, err)
+	}
+
+	return nil
+}
+
 func (s *Saver) downloadFile(url string, id string, dest string) error {
 	r, err := s.client.FetchURL(url, id)
 	if err == ErrNotFound {
@@ -172,7 +259,7 @@ func (s *Saver) downloadFile(url string, id string, dest string) error {
 	return nil
 }
 
-func (s *Saver) saveTag(id string, tag Tag) error {
+func (s *Saver) saveTag(id string, tag interface{}) error {
 	dest := path.Join(s.destDir, fmt.Sprintf("%s.json", id))
 	f, err := os.Create(dest)
 	if err != nil {

@@ -25,7 +25,7 @@ func TestSaver(t *testing.T) {
 		id:  "77161623",
 		url: "https://www.pixiv.net/artworks/77161623",
 	}
-	err = saver.saveBookmark(bm)
+	err = saver.saveIllustBookmark(bm)
 	if err != nil {
 		panic(err)
 	}

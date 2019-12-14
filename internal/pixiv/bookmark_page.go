@@ -13,7 +13,7 @@ type Bookmark struct {
 	url string
 }
 
-func parseBookmarkPage(r io.Reader) ([]Bookmark, error) {
+func parseIllustBookmarkPage(r io.Reader) ([]Bookmark, error) {
 	doc, err := htmlquery.Parse(r)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse bookmark page: %w", err)
@@ -27,6 +27,28 @@ func parseBookmarkPage(r io.Reader) ([]Bookmark, error) {
 		bms = append(bms, Bookmark{
 			id:  id,
 			url: fmt.Sprintf("https://www.pixiv.net/artworks/%s", id),
+		})
+	}
+	return bms, nil
+}
+
+func parseNovelBookmarkPage(r io.Reader) ([]Bookmark, error) {
+	doc, err := htmlquery.Parse(r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse bookmark page: %w", err)
+	}
+
+	bms := make([]Bookmark, 0)
+	for _, n := range htmlquery.Find(doc, "//form[@action='bookmark_setting.php']//h1/a/@href") {
+		href := htmlquery.InnerText(n)
+		i := strings.Index(href, "id=")
+		if i == -1 {
+			continue
+		}
+		id := href[i+len("id="):]
+		bms = append(bms, Bookmark{
+			id:  id,
+			url: fmt.Sprintf("https://www.pixiv.net/novel/show.php?id=%s", id),
 		})
 	}
 	return bms, nil
