@@ -4,6 +4,7 @@ import (
 	"github.com/osak/Akasha-Chronik/internal/config"
 	"github.com/osak/Akasha-Chronik/internal/pixiv"
 	"os"
+	"strconv"
 )
 
 func main() {
@@ -23,20 +24,18 @@ func main() {
 		panic(err)
 	}
 
-	/*
-		startPage := 1
-		if len(os.Args) >= 3 {
-			startPage, err = strconv.Atoi(os.Args[2])
-			if err != nil {
-				panic(err)
-			}
-		}
-
-		err = saver.SaveBookmarks(startPage)
+	startPage := 1
+	if len(os.Args) >= 3 {
+		startPage, err = strconv.Atoi(os.Args[2])
 		if err != nil {
 			panic(err)
 		}
-	*/
+	}
+
+	err = saver.SaveBookmarks(startPage)
+	if err != nil {
+		panic(err)
+	}
 
 	err = saver.SaveBookmarksNovel(1)
 	if err != nil {
