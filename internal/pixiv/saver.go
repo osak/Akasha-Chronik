@@ -71,6 +71,8 @@ func loadLastState(destDir string) (State, error) {
 func (s *Saver) SaveBookmarks(startPage int) error {
 	lastSeenID := s.state.LastID
 	newestId := ""
+
+outer:
 	for page := startPage; ; page += 1 {
 		bms, err := s.client.Bookmarks(page)
 		if err != nil {
@@ -85,7 +87,7 @@ func (s *Saver) SaveBookmarks(startPage int) error {
 
 		for _, bm := range bms {
 			if bm.id == lastSeenID {
-				break
+				break outer
 			}
 
 			log.Printf("Saving %s", bm.id)
