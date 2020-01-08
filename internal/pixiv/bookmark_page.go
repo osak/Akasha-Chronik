@@ -6,7 +6,6 @@ import (
 	"github.com/osak/Akasha-Chronik/internal/htmlutil"
 	"io"
 	"log"
-	"regexp"
 	"strings"
 )
 
@@ -24,10 +23,14 @@ func parseIllustBookmarkPage(r io.Reader) ([]Bookmark, error) {
 	bms := make([]Bookmark, 0)
 	for _, n := range htmlquery.Find(doc, "//div[@class='display_editable_works']//li[@class='image-item']/a[1]") {
 		href := htmlutil.FindAttr(n, "href")
-		bm, err := parseIllustUrl(href)
-		if err != nil {
-			log.Printf("failed to parse illust url from bookmark: %v", err)
+		illustId := extractIllustId(href)
+		if illustId == "" {
+			log.Printf("failed to extract illust id from url: %s", err)
 			continue
+		}
+		bm := Bookmark{
+			id:  illustId,
+			url: fmt.Sprintf("https://www.pixiv.net/artworks/%s", illustId),
 		}
 		bms = append(bms, bm)
 	}
@@ -54,23 +57,4 @@ func parseNovelBookmarkPage(r io.Reader) ([]Bookmark, error) {
 		})
 	}
 	return bms, nil
-}
-
-var urlPatterns = []*regexp.Regexp{
-	regexp.MustCompile(`illust_id=(\d+)`),
-	regexp.MustCompile(`/artworks/(\d+)`),
-}
-
-func parseIllustUrl(url string) (Bookmark, error) {
-	for _, pattern := range urlPatterns {
-		subs := pattern.FindStringSubmatch(url)
-		if subs != nil {
-			return Bookmark{
-				id:  subs[1],
-				url: fmt.Sprintf("https://www.pixiv.net/artworks/%s", subs[1]),
-			}, nil
-		}
-	}
-
-	return Bookmark{}, fmt.Errorf("cannot parse illust url: %s", url)
 }

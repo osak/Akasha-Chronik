@@ -17,9 +17,10 @@ type Saver struct {
 }
 
 type State struct {
-	FailedUrls  []string
-	LastID      string
-	LastNovelID string `json:",omitempty"`
+	FailedUrls   []string
+	LastID       string
+	LastNovelID  string `json:",omitempty"`
+	RecoveryMode bool   `json:",omitempty"`
 }
 
 type Tag struct {
@@ -78,6 +79,59 @@ func loadLastState(destDir string) (State, error) {
 	}
 
 	return state, nil
+}
+
+func (s *Saver) Run() error {
+	if s.state.RecoveryMode {
+		if err := s.RunRecovery(); err != nil {
+			return fmt.Errorf("failed recovery run: %w", err)
+		}
+	} else {
+		if err := s.SaveBookmarks(0); err != nil {
+			log.Printf("failed to save illust bookmarks: %v", err)
+		}
+		if err := s.SaveBookmarksNovel(0); err != nil {
+			log.Printf("failed to save novel bookmarks: %v", err)
+		}
+	}
+
+	return nil
+}
+
+func (s *Saver) RunRecovery() error {
+	stillFailedUrls := make([]string, 0)
+	for _, url := range s.state.FailedUrls {
+		if err := s.saveUrl(url); err != nil {
+			log.Printf("failed to save %s: %w", url, err)
+			stillFailedUrls = append(stillFailedUrls, url)
+		}
+	}
+
+	s.state.FailedUrls = stillFailedUrls
+	s.state.RecoveryMode = false
+	if err := s.saveState(); err != nil {
+		return fmt.Errorf("failed to save state: %w", err)
+	}
+
+	return nil
+}
+
+func (s *Saver) saveUrl(url string) error {
+	illustId := extractIllustId(url)
+	if illustId == "" {
+		return fmt.Errorf("failed to extract illust ID from url: %s", illustId)
+	}
+
+	info, err := s.client.IllustInfo(illustId)
+	if err != nil {
+		return fmt.Errorf("failed to fetch illust info for illust %s: %w", illustId, err)
+	}
+
+	if err = s.saveIllust(url, info); err != nil {
+		return fmt.Errorf("failed to save illust %s: %w", info.ID, err)
+	}
+
+	return nil
 }
 
 func (s *Saver) SaveBookmarks(startPage int) error {
@@ -161,13 +215,19 @@ func (s *Saver) saveIllustBookmark(bm Bookmark) error {
 	if err != nil {
 		return fmt.Errorf("failed to fetch illust info for %s: %w", bm.url, err)
 	}
+	if err = s.saveIllust(bm.url, info); err != nil {
+		return fmt.Errorf("failed to save illust %s: %w", info.ID, err)
+	}
+	return nil
+}
 
+func (s *Saver) saveIllust(originalUrl string, info IllustInfo) error {
 	tag := Tag{
 		ID:          info.ID,
 		Title:       info.Title,
 		Description: info.Description,
 		AuthorName:  info.AuthorName,
-		OriginalUrl: bm.url,
+		OriginalUrl: originalUrl,
 		Tags:        info.Tags,
 		ImageFiles:  make([]string, 0),
 		Timestamp:   info.Timestamp,
@@ -183,14 +243,14 @@ func (s *Saver) saveIllustBookmark(bm Bookmark) error {
 			log.Printf("Max page: %d", page-1)
 			break
 		} else if err != nil {
-			return fmt.Errorf("failed to save some images in illust %s: %w", bm.url, err)
+			return fmt.Errorf("failed to save some images in illust %s: %w", info.ID, err)
 		}
 
 		tag.ImageFiles = append(tag.ImageFiles, dest)
 	}
 
-	if err := s.saveTag(bm.id, tag); err != nil {
-		return fmt.Errorf("failed to write tag file for illust %s: %w", bm.url, err)
+	if err := s.saveTag(info.ID, tag); err != nil {
+		return fmt.Errorf("failed to write tag file for illust %s: %w", info.ID, err)
 	}
 
 	return nil
