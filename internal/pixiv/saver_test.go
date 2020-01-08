@@ -22,8 +22,8 @@ func TestSaver(t *testing.T) {
 	}
 
 	bm := Bookmark{
-		id:  "77161623",
-		url: "https://www.pixiv.net/artworks/77161623",
+		id:  "78442430",
+		url: "https://www.pixiv.net/artworks/78442430",
 	}
 	err = saver.saveIllustBookmark(bm)
 	if err != nil {
