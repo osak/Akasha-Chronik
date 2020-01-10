@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
-	"github.com/osak/Akasha-Chronik/internal/config"
+	"github.com/osak/Akasha-Chronik/pkg/config"
 )
 
 type Twitter struct {

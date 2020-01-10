@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/osak/Akasha-Chronik/internal/config"
-	"github.com/osak/Akasha-Chronik/internal/downloader"
 	"github.com/osak/Akasha-Chronik/internal/twitter"
+	"github.com/osak/Akasha-Chronik/pkg/config"
+	"github.com/osak/Akasha-Chronik/pkg/downloader"
 	"os"
 )
 

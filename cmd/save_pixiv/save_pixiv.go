@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/osak/Akasha-Chronik/internal/config"
 	"github.com/osak/Akasha-Chronik/internal/pixiv"
+	"github.com/osak/Akasha-Chronik/pkg/config"
 	"os"
 )
 

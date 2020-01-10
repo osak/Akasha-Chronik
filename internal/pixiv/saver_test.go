@@ -1,7 +1,7 @@
 package pixiv
 
 import (
-	"github.com/osak/Akasha-Chronik/internal/config"
+	"github.com/osak/Akasha-Chronik/pkg/config"
 	"testing"
 )
 

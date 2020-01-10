@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/antchfx/htmlquery"
-	"github.com/osak/Akasha-Chronik/internal/htmlutil"
+	"github.com/osak/Akasha-Chronik/pkg/htmlutil"
 	"golang.org/x/net/html"
 	"io"
 	"io/ioutil"

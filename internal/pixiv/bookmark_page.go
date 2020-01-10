@@ -3,7 +3,7 @@ package pixiv
 import (
 	"fmt"
 	"github.com/antchfx/htmlquery"
-	"github.com/osak/Akasha-Chronik/internal/htmlutil"
+	"github.com/osak/Akasha-Chronik/pkg/htmlutil"
 	"io"
 	"log"
 	"strings"
