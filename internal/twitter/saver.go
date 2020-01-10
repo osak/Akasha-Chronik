@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/dghubble/go-twitter/twitter"
+	"github.com/osak/Akasha-Chronik/internal/closer"
 	"github.com/osak/Akasha-Chronik/pkg/downloader"
 	"log"
 	"os"
@@ -62,7 +63,7 @@ func loadLastState(destDir string) (State, error) {
 	if err != nil {
 		return State{}, fmt.Errorf("cannot open '%v': %w", name, err)
 	}
-	defer f.Close()
+	defer closer.MustClose(f)
 
 	decoder := json.NewDecoder(f)
 	var state State

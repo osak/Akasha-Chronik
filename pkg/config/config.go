@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/osak/Akasha-Chronik/internal/closer"
 	"gopkg.in/yaml.v2"
 	"os"
 )
@@ -27,7 +28,7 @@ func Load(path string) (*Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot open file %s: %w", path, err)
 	}
-	defer f.Close()
+	defer closer.MustClose(f)
 
 	decoder := yaml.NewDecoder(f)
 	config := Config{}

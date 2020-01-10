@@ -61,12 +61,6 @@ func parseIllustPage(r io.Reader) (IllustInfo, error) {
 	return info, nil
 }
 
-func newIllustInfo() IllustInfo {
-	return IllustInfo{
-		Tags: make([]string, 0),
-	}
-}
-
 func parseFromPreloadMetaIllust(doc *html.Node) (IllustInfo, error) {
 	n := htmlquery.FindOne(doc, "//meta[@id='meta-preload-data']/@content")
 	if n == nil {
@@ -105,30 +99,6 @@ func parseFromPreloadMetaIllust(doc *html.Node) (IllustInfo, error) {
 		ID:           key,
 		Timestamp:    timestamp,
 	}, nil
-}
-
-func parseFromHtml(doc *html.Node) IllustInfo {
-	info := newIllustInfo()
-	n := htmlquery.FindOne(doc, "//link[@rel=\"canonical\"]/@href")
-	info.ID = path.Base(htmlquery.InnerText(n))
-
-	n = htmlquery.FindOne(doc, "//figcaption//h1")
-	info.Title = htmlquery.InnerText(n)
-
-	n = htmlquery.FindOne(doc, "//figcaption//p[@id='expandable-paragraph-0']")
-	info.Description = htmlquery.InnerText(n)
-
-	for _, n := range htmlquery.Find(doc, "//a") {
-		href := htmlutil.FindAttr(n, "href")
-		if strings.Contains(href, "i.pximg.net") && strings.Contains(href, info.ID) {
-			info.ImageUrlBase = extractUrlBase(href)
-			info.ImageExt = path.Ext(href)
-		} else if strings.Contains(href, "www.pixiv.net/tags/") {
-			info.Tags = append(info.Tags, strings.TrimSpace(htmlquery.InnerText(n)))
-		}
-	}
-
-	return info
 }
 
 func extractUrlBase(url string) string {

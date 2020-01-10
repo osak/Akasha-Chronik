@@ -2,6 +2,7 @@ package downloader
 
 import (
 	"fmt"
+	"github.com/osak/Akasha-Chronik/internal/closer"
 	"io"
 	"log"
 	"os"
@@ -68,7 +69,7 @@ func download(entry queueEntry) error {
 	if err != nil {
 		return fmt.Errorf("error downloading %s: %w", err)
 	}
-	defer r.Close()
+	defer closer.MustClose(r)
 
 	if _, err := io.Copy(f, r); err != nil {
 		return fmt.Errorf("error copying '%s' to '%s': %w", entry.url, entry.dest, err)

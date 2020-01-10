@@ -2,6 +2,7 @@ package pixiv
 
 import (
 	"fmt"
+	"github.com/osak/Akasha-Chronik/internal/closer"
 	"github.com/osak/Akasha-Chronik/pkg/config"
 	"io"
 	"net/http"
@@ -53,7 +54,7 @@ func (c *Client) Bookmarks(page int) ([]Bookmark, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get bookmarks: %w", err)
 	}
-	defer resp.Body.Close()
+	defer closer.MustClose(resp.Body)
 
 	bms, err := parseIllustBookmarkPage(resp.Body)
 	if err != nil {
@@ -67,7 +68,7 @@ func (c *Client) BookmarksNovel(page int) ([]Bookmark, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get bookmarks: %w", err)
 	}
-	defer resp.Body.Close()
+	defer closer.MustClose(resp.Body)
 
 	bms, err := parseNovelBookmarkPage(resp.Body)
 	if err != nil {
@@ -81,7 +82,7 @@ func (c *Client) IllustInfo(id string) (IllustInfo, error) {
 	if err != nil {
 		return IllustInfo{}, fmt.Errorf("failed to get illust page (id=%s): %w", id, err)
 	}
-	defer resp.Body.Close()
+	defer closer.MustClose(resp.Body)
 
 	info, err := parseIllustPage(resp.Body)
 	if err != nil {
@@ -95,7 +96,7 @@ func (c *Client) NovelInfo(id string) (NovelInfo, error) {
 	if err != nil {
 		return NovelInfo{}, fmt.Errorf("failed to get novel page (id=%s): %w", id, err)
 	}
-	defer resp.Body.Close()
+	defer closer.MustClose(resp.Body)
 
 	info, err := parseNovelPage(resp.Body)
 	if err != nil {
