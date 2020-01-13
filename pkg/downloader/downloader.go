@@ -2,7 +2,7 @@ package downloader
 
 import (
 	"fmt"
-	"github.com/osak/Akasha-Chronik/internal/closer"
+	"github.com/osak/Akasha-Chronik/pkg/closer"
 	"io"
 	"log"
 	"os"

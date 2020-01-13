@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/dghubble/go-twitter/twitter"
-	"github.com/osak/Akasha-Chronik/internal/closer"
+	"github.com/osak/Akasha-Chronik/pkg/closer"
 	"github.com/osak/Akasha-Chronik/pkg/downloader"
 	"log"
 	"os"

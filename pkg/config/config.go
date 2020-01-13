@@ -2,7 +2,7 @@ package config
 
 import (
 	"fmt"
-	"github.com/osak/Akasha-Chronik/internal/closer"
+	"github.com/osak/Akasha-Chronik/pkg/closer"
 	"gopkg.in/yaml.v2"
 	"os"
 )
