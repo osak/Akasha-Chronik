@@ -5,6 +5,7 @@ import (
 	"github.com/antchfx/htmlquery"
 	"github.com/osak/Akasha-Chronik/pkg/htmlutil"
 	"io"
+	"io/ioutil"
 	"log"
 	"strings"
 )
@@ -15,7 +16,13 @@ type Bookmark struct {
 }
 
 func parseIllustBookmarkPage(r io.Reader) ([]Bookmark, error) {
-	doc, err := htmlquery.Parse(r)
+	buf, err := ioutil.ReadAll(r)
+	if err != nil {
+		panic(err)
+	}
+	log.Printf("%s", string(buf))
+
+	doc, err := htmlquery.Parse(strings.NewReader(string(buf)))
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse bookmark page: %w", err)
 	}
