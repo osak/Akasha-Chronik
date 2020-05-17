@@ -102,7 +102,7 @@ func (s *Saver) RunRecovery() error {
 	stillFailedUrls := make([]string, 0)
 	for _, url := range s.state.FailedUrls {
 		if err := s.saveUrl(url); err != nil {
-			log.Printf("failed to save %s: %w", url, err)
+			log.Printf("failed to save %s: %v", url, err)
 			stillFailedUrls = append(stillFailedUrls, url)
 		}
 	}

@@ -3,13 +3,14 @@ package twitter
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/dghubble/go-twitter/twitter"
-	"github.com/osak/Akasha-Chronik/pkg/closer"
-	"github.com/osak/Akasha-Chronik/pkg/downloader"
 	"log"
 	"os"
 	"path"
 	"time"
+
+	"github.com/dghubble/go-twitter/twitter"
+	"github.com/osak/Akasha-Chronik/pkg/closer"
+	"github.com/osak/Akasha-Chronik/pkg/downloader"
 )
 
 type Saver struct {
@@ -160,7 +161,7 @@ func (s *Saver) saveTag(tag Tag) error {
 	}
 
 	if err := f.Close(); err != nil {
-		return fmt.Errorf("failed to close file '%s': %w", err)
+		return fmt.Errorf("failed to close file '%s': %w", dest, err)
 	}
 	return nil
 }

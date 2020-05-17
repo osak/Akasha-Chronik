@@ -67,7 +67,7 @@ func download(entry queueEntry) error {
 
 	r, err := entry.fetcher.FetchURL(entry.url)
 	if err != nil {
-		return fmt.Errorf("error downloading %s: %w", err)
+		return fmt.Errorf("error downloading %s: %w", entry.url, err)
 	}
 	defer closer.MustClose(r)
 
