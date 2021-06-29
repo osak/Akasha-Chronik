@@ -1,9 +1,8 @@
 package pixiv
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/antchfx/htmlquery"
-	"github.com/osak/Akasha-Chronik/pkg/htmlutil"
 	"io"
 	"io/ioutil"
 	"log"
@@ -15,6 +14,14 @@ type Bookmark struct {
 	url string
 }
 
+type bookmarkJson struct {
+	Body struct {
+		Works []struct {
+			Id string `json:"id"`
+		} `json:"works"`
+	} `json:"body"`
+}
+
 func parseIllustBookmarkPage(r io.Reader) ([]Bookmark, error) {
 	buf, err := ioutil.ReadAll(r)
 	if err != nil {
@@ -22,22 +29,17 @@ func parseIllustBookmarkPage(r io.Reader) ([]Bookmark, error) {
 	}
 	log.Printf("%s", string(buf))
 
-	doc, err := htmlquery.Parse(strings.NewReader(string(buf)))
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse bookmark page: %w", err)
+	decoder := json.NewDecoder(strings.NewReader(string(buf)))
+	var blob bookmarkJson
+	if err = decoder.Decode(&blob); err != nil {
+		return nil, fmt.Errorf("failed to parse bookmark JSON: %w", err)
 	}
 
 	bms := make([]Bookmark, 0)
-	for _, n := range htmlquery.Find(doc, "//div[@class='display_editable_works']//li[@class='image-item']/a[1]") {
-		href := htmlutil.FindAttr(n, "href")
-		illustId := extractIllustId(href)
-		if illustId == "" {
-			log.Printf("failed to extract illust id from url: %s", err)
-			continue
-		}
+	for _, work := range blob.Body.Works {
 		bm := Bookmark{
-			id:  illustId,
-			url: fmt.Sprintf("https://www.pixiv.net/artworks/%s", illustId),
+			id:  work.Id,
+			url: fmt.Sprintf("https://www.pixiv.net/artworks/%s", work.Id),
 		}
 		bms = append(bms, bm)
 	}
@@ -45,23 +47,25 @@ func parseIllustBookmarkPage(r io.Reader) ([]Bookmark, error) {
 }
 
 func parseNovelBookmarkPage(r io.Reader) ([]Bookmark, error) {
-	doc, err := htmlquery.Parse(r)
+	buf, err := ioutil.ReadAll(r)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse bookmark page: %w", err)
+		panic(err)
+	}
+	log.Printf("%s", string(buf))
+
+	decoder := json.NewDecoder(strings.NewReader(string(buf)))
+	var blob bookmarkJson
+	if err = decoder.Decode(&blob); err != nil {
+		return nil, fmt.Errorf("failed to parse bookmark JSON: %w", err)
 	}
 
 	bms := make([]Bookmark, 0)
-	for _, n := range htmlquery.Find(doc, "//form[@action='bookmark_setting.php']//h1/a/@href") {
-		href := htmlquery.InnerText(n)
-		i := strings.Index(href, "id=")
-		if i == -1 {
-			continue
+	for _, work := range blob.Body.Works {
+		bm := Bookmark{
+			id:  work.Id,
+			url: fmt.Sprintf("https://www.pixiv.net/novel/show.php?id=%s", work.Id),
 		}
-		id := href[i+len("id="):]
-		bms = append(bms, Bookmark{
-			id:  id,
-			url: fmt.Sprintf("https://www.pixiv.net/novel/show.php?id=%s", id),
-		})
+		bms = append(bms, bm)
 	}
 	return bms, nil
 }

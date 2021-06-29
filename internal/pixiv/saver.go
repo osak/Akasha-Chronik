@@ -87,10 +87,10 @@ func (s *Saver) Run() error {
 			return fmt.Errorf("failed recovery run: %w", err)
 		}
 	} else {
-		if err := s.SaveBookmarks(1); err != nil {
+		if err := s.SaveBookmarks(0); err != nil {
 			log.Printf("failed to save illust bookmarks: %v", err)
 		}
-		if err := s.SaveBookmarksNovel(1); err != nil {
+		if err := s.SaveBookmarksNovel(0); err != nil {
 			log.Printf("failed to save novel bookmarks: %v", err)
 		}
 	}

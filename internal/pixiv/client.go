@@ -83,7 +83,9 @@ func NewFanboxClient(config config.PixivConfig) (*Client, error) {
 }
 
 func (c *Client) Bookmarks(page int) ([]Bookmark, error) {
-	resp, err := c.FetchRaw(fmt.Sprintf("https://www.pixiv.net/bookmark.php?p=%d", page), map[string]string{})
+	resp, err := c.FetchRaw(fmt.Sprintf("https://www.pixiv.net/ajax/user/%d/illusts/bookmarks?tag=&offset=%d&limit=48&rest=show&lang=ja", c.config.UserId, page*48), map[string]string{
+		"Accept": "application/json",
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get bookmarks: %w", err)
 	}
@@ -97,7 +99,7 @@ func (c *Client) Bookmarks(page int) ([]Bookmark, error) {
 }
 
 func (c *Client) BookmarksNovel(page int) ([]Bookmark, error) {
-	resp, err := c.FetchRaw(fmt.Sprintf("https://www.pixiv.net/novel/bookmark.php?p=%d", page), map[string]string{})
+	resp, err := c.FetchRaw(fmt.Sprintf("https://www.pixiv.net/ajax/user/%d/novels/bookmarks?tag=&offset=%d&limit=48&rest=show&lang=ja", c.config.UserId, page*48), map[string]string{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get bookmarks: %w", err)
 	}
@@ -179,6 +181,7 @@ func (c *Client) FetchRaw(url string, headers map[string]string) (io.ReadCloser,
 		}
 	}
 	request.Header.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:82.0) Gecko/20100101 Firefox/82.0")
+	request.Header.Add("x-user-id", fmt.Sprintf("%d", c.config.UserId))
 
 	response, err := c.httpClient.Do(request)
 	if err != nil {
