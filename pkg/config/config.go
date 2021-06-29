@@ -21,7 +21,7 @@ type TwitterConfig struct {
 }
 
 type PixivConfig struct {
-	UserId 		 int    `yaml:"user_id"`
+	UserId       int    `yaml:"user_id"`
 	PhpSessID    string `yaml:"php_sess_id"`
 	FanboxSessID string `yaml:"fanbox_sess_id"`
 }
