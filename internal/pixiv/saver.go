@@ -233,6 +233,12 @@ func (s *Saver) saveIllust(originalUrl string, info IllustInfo) error {
 		Timestamp:   info.Timestamp,
 	}
 
+	tagName := path.Join(s.destDir, fmt.Sprintf("%s.json", tag.ID))
+	if _, err := os.Stat(tagName); os.IsExist(err) {
+		log.Printf("Skipping %v as already saved", tag.ID)
+		return nil
+	}
+
 	for page := 0; ; page += 1 {
 		url := fmt.Sprintf("%s_p%d%s", info.ImageUrlBase, page, info.ImageExt)
 		dest := path.Join(s.destDir, fmt.Sprintf("%s_%d%s", info.ID, page, info.ImageExt))

@@ -75,6 +75,12 @@ mainLoop:
 			}
 
 			log.Printf("Saving %v", article.Id)
+			tagName := path.Join(s.destDir, fmt.Sprintf("%s.json", article.Id))
+			if _, err := os.Stat(tagName); os.IsExist(err) {
+				log.Printf("Skipping %v as already saved", article.Id)
+				continue
+			}
+
 			for _, image := range article.ImageList() {
 				name := fmt.Sprintf("%s_%v.%v", article.Id, image.Id, image.Extension)
 				log.Printf("Saving %v to %v", image.OriginalUrl, name)
@@ -87,7 +93,6 @@ mainLoop:
 				}
 			}
 
-			tagName := fmt.Sprintf("%s.json", article.Id)
 			if err := s.saveTag(article, tagName); err != nil {
 				s.state.FailedUrls = append(s.state.FailedUrls, article.Permalink())
 				log.Printf("Failed to save tag for %v: %v", article.Id, err)
