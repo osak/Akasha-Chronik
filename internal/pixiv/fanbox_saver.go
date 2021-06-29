@@ -60,7 +60,7 @@ func loadLastFanboxState(destDir string) (FanboxState, error) {
 }
 
 func (s *FanboxSaver) Run() error {
-	url := "https://fanbox.pixiv.net/api/post.listHome?limit=50"
+	url := "https://api.fanbox.cc/post.listHome?limit=50"
 mainLoop:
 	for {
 		log.Printf("Load home: %s", url)

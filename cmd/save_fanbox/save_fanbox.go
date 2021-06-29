@@ -14,7 +14,7 @@ func main() {
 		panic(err)
 	}
 
-	client, err := pixiv.NewClient(globalConfig.Pixiv)
+	client, err := pixiv.NewFanboxClient(globalConfig.Pixiv)
 	if err != nil {
 		panic(err)
 	}

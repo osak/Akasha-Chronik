@@ -2,9 +2,10 @@ package config
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/osak/Akasha-Chronik/pkg/closer"
 	"gopkg.in/yaml.v2"
-	"os"
 )
 
 type Config struct {
@@ -20,7 +21,8 @@ type TwitterConfig struct {
 }
 
 type PixivConfig struct {
-	PhpSessID string `yaml:"php_sess_id"`
+	PhpSessID    string `yaml:"php_sess_id"`
+	FanboxSessID string `yaml:"fanbox_sess_id"`
 }
 
 func Load(path string) (*Config, error) {
