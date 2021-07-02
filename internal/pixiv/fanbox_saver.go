@@ -75,8 +75,8 @@ mainLoop:
 			}
 
 			log.Printf("Saving %v", article.Id)
-			tagName := path.Join(s.destDir, fmt.Sprintf("%s.json", article.Id))
-			if _, err := os.Stat(tagName); os.IsExist(err) {
+			tagName := fmt.Sprintf("%s.json", article.Id)
+			if _, err := os.Stat(path.Join(s.destDir, tagName)); err == nil {
 				log.Printf("Skipping %v as already saved", article.Id)
 				continue
 			}

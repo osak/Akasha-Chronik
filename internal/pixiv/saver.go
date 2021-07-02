@@ -234,7 +234,7 @@ func (s *Saver) saveIllust(originalUrl string, info IllustInfo) error {
 	}
 
 	tagName := path.Join(s.destDir, fmt.Sprintf("%s.json", tag.ID))
-	if _, err := os.Stat(tagName); os.IsExist(err) {
+	if _, err := os.Stat(tagName); err == nil {
 		log.Printf("Skipping %v as already saved", tag.ID)
 		return nil
 	}
