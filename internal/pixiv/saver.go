@@ -147,7 +147,7 @@ outer:
 		if len(bms) == 0 {
 			break
 		}
-		if page == 1 {
+		if page == 0 {
 			newestId = bms[0].id
 		}
 
@@ -185,7 +185,7 @@ outer:
 		if len(bms) == 0 {
 			break
 		}
-		if page == 1 {
+		if page == 0 {
 			newestId = bms[0].id
 		}
 
