@@ -14,10 +14,29 @@ type Bookmark struct {
 	url string
 }
 
+type StringWrapper struct {
+	value string
+}
+
+func (s *StringWrapper) UnmarshalJSON(raw []byte) error {
+	var value interface{}
+	if err := json.Unmarshal(raw, &value); err != nil {
+		return fmt.Errorf("failed to parse id-ish value %v: %w", raw, err)
+	}
+	if strval, ok := value.(string); ok {
+		s.value = strval
+	} else if intval, ok := value.(float64); ok {
+		s.value = string(int(intval))
+	} else {
+		return fmt.Errorf("failed to parse id-ish value %v: it's not string nor int", raw)
+	}
+	return nil
+}
+
 type bookmarkJson struct {
 	Body struct {
 		Works []struct {
-			Id string `json:"id"`
+			Id StringWrapper `json:"id"`
 		} `json:"works"`
 	} `json:"body"`
 }
@@ -38,8 +57,8 @@ func parseIllustBookmarkPage(r io.Reader) ([]Bookmark, error) {
 	bms := make([]Bookmark, 0)
 	for _, work := range blob.Body.Works {
 		bm := Bookmark{
-			id:  work.Id,
-			url: fmt.Sprintf("https://www.pixiv.net/artworks/%s", work.Id),
+			id:  work.Id.value,
+			url: fmt.Sprintf("https://www.pixiv.net/artworks/%s", work.Id.value),
 		}
 		bms = append(bms, bm)
 	}
@@ -62,8 +81,8 @@ func parseNovelBookmarkPage(r io.Reader) ([]Bookmark, error) {
 	bms := make([]Bookmark, 0)
 	for _, work := range blob.Body.Works {
 		bm := Bookmark{
-			id:  work.Id,
-			url: fmt.Sprintf("https://www.pixiv.net/novel/show.php?id=%s", work.Id),
+			id:  work.Id.value,
+			url: fmt.Sprintf("https://www.pixiv.net/novel/show.php?id=%s", work.Id.value),
 		}
 		bms = append(bms, bm)
 	}
